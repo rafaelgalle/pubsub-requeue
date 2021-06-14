@@ -9,6 +9,12 @@ Precisamos de:
 
   2 - Número limite de repetições
 
+Funcionou em retryLimitTime e retryWithDeadLetter
+
+retryLimitTime: (Ruim) Feito manual, ao publicar a mensagem é definido através de um atributo o tempo limite de vida para essa mensagem, e a cada processamento é verificado se esse tempo estourou, ao assinar um topico é informada configuração de retry, que funciona perfeitamente.
+
+retryWithDeadLetter: (Meia boca) Feito manual, ao publicar a mensagem é definido através de um atributo o limite de tentativas, e a cada processamento é verificado se esse limite foi excedido, o deliveryAttemps da mensagem só é incrementado se tem uma deadLetter vinculada, acredito que ao exceder esse limite a mensagem deveria ser entregue a deadLetter e sair da fila atual, mas não é oq acontece, por isso foi necessário fazer a verificação manual para remover essa mensagem da fila.
+
 https://medium.com/zendesk-engineering/adding-functionality-to-google-pub-sub-queue-meta-processing-fff15e2d3a2c
 https://cloud.google.com/pubsub/architecture?hl=pt-br#data_plane_-_the_life_of_a_message
 https://cloud.google.com/pubsub/docs/dead-letter-topics?hl=pt-br
