@@ -59,6 +59,9 @@ async function quickstart() {
 
   pubsub.subscription(subscriptionName).on('message', message => {
     console.log(subscriptionName + ' Received message:', message.data.toString());
+    console.log('DeliveryAttempt: ', message.deliveryAttempt);
+    console.log('publishTime: ', message.publishTime);
+    console.log('Attributes: ', message.attributes);
     console.log('Send nack message');
     setTimeout(() => {
       message.nack();
