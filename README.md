@@ -1,39 +1,44 @@
-# pubsub-requeue
-Reprocessamento com pubsub google
+## **PUBSUB REQUEUE**
 
-Doc do pubsub ta um lixo, tudo sobre reprocessamento é muito vago.
+Objetivo deste repositório é encontrar uma maneira de reenfileirar mensagens que tiveram falha em seu processamento, uma alternativa ao repositório de reprocessamento com rabbitmq https://github.com/rafaelgalle/rabbitmq-requeue
 
-Precisamos de:
+Após aplicar reprocessamento com rabbitmq resolvi experimenta-lo com pubsub, um serviço gerenciado pelo google onde não precisamos nos preocupar com escalonamento nem gerenciamento de nada, apesar de serem parecidos, o pubsub não implementa o protocolo amqp como o rabbitmq, então são diferentes apesar de semelhantes.
 
-  1 - Tempo de espera entre repetições
+Para esse exemplo estamos buscando um reprocessamento, um número limitado de tentativas e com um tempo x de espera entre cada repetição.
+* Tempo de espera entre repetições
+* Número limite de repetições
 
-  2 - Número limite de repetições
+### **Emulador**
+Para evitar criar uma conta no GCP e gerar custos utilizando o PUBSUB, podemos utilizar seu emulador.
 
-Funcionou em retryLimitTime e retryWithDeadLetter
+Instalando emulador
+```gcloud components install pubsub-emulator```
 
-retryLimitTime: (Ruim) Feito manual, ao publicar a mensagem é definido através de um atributo o tempo limite de vida para essa mensagem, e a cada processamento é verificado se esse tempo estourou, ao assinar um topico é informada configuração de retry, que funciona perfeitamente.
+Iniciando emulador
+```gcloud beta emulators pubsub start --project=test-emulator-pubsub```
 
-retryWithDeadLetter: (Meia boca) Feito manual, ao publicar a mensagem é definido através de um atributo o limite de tentativas, e a cada processamento é verificado se esse limite foi excedido, o deliveryAttemps da mensagem só é incrementado se tem uma deadLetter vinculada, acredito que ao exceder esse limite a mensagem deveria ser entregue a deadLetter e sair da fila atual, mas não é oq acontece, por isso foi necessário fazer a verificação manual para remover essa mensagem da fila.
+Configurando variaveis para o projeto utilizar emulador
+```$(gcloud beta emulators pubsub env-init)```
 
+Mais detalhes sobre como utilizar o emulador estão presentes nesse link
+https://cloud.google.com/pubsub/docs/emulator?hl=pt_br#linux-macos
+
+### **Execução**
+
+Após instalar e iniciar o emulador, abra dois terminais e execute a configuração de variavel do emulador em ambos.
+
+```$(gcloud beta emulators pubsub env-init)```
+
+Então em um deles execute o ```createTopics.js``` e no outro o ```createSubscriptions.js```, após criar o topic e sub, em um terminal execute o ```sub.js``` para iniciar o sub e no outro execute o ```pub.js``` para publicar a mensagem, você verá no terminal do sub as tentativas e o tempo de espera entre cada processamento, até que a mensagem seja descartada para fila de cartas mortas.
+
+
+### **Referencias**
 https://medium.com/zendesk-engineering/adding-functionality-to-google-pub-sub-queue-meta-processing-fff15e2d3a2c
+
 https://cloud.google.com/pubsub/architecture?hl=pt-br#data_plane_-_the_life_of_a_message
+
 https://cloud.google.com/pubsub/docs/dead-letter-topics?hl=pt-br
+
 https://cloud.google.com/pubsub/docs/samples/pubsub-publisher-retry-settings?hl=pt-br
 
 https://cloud.google.com/pubsub/docs/publisher
-
-Procurando algo em issues e comentários
-
-https://github.com/googleapis/nodejs-pubsub/issues/1189
-https://github.com/googleapis/nodejs-pubsub/issues/1029
-https://gist.github.com/mgabeler-lee-6rs/69a9b0e368d061b1935a7aa428e217b6
-
-Já que não consegui fazer só com retry, fazer também com deadletter (Não funcionou, por algum motivo não aceitou retry + deadletter)
-
-https://cloud.google.com/pubsub/docs/samples/pubsub-publisher-retry-settings
-
-
-Ou usar atributos da mensagem e contar manualmente o limite (Terei q fazer isso)
-
-// exemplo de topic e sub exists
-https://gist.github.com/mgabeler-lee-6rs/69a9b0e368d061b1935a7aa428e217b6
